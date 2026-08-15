@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LearnSelfAI</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">L</span>
+      <h1>LearnSelfAI</h1>
+    </div>
+    <button id="theme-toggle" class="theme-toggle" type="button" title="Toggle light/dark theme">
+      <span id="theme-icon">🌙</span>
+    </button>
+  </header>
+
+  <p class="dashboard-hint">
+    Progress updates automatically based on lessons you've marked complete across both
+    courses below. Streak counts consecutive days with at least one completion.
+  </p>
+  <section class="dashboard" id="dashboard" aria-label="Your progress">
+    <div class="stat-card stat-card--primary">
+      <div class="stat-ring" id="stat-ring">
+        <span id="stat-ring-text">0%</span>
+      </div>
+      <div>
+        <div class="stat-label">Overall progress</div>
+        <div class="stat-sub" id="stat-lessons-sub">0 of 0 lessons</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-streak">0</div>
+      <div class="stat-label">Day streak 🔥</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-completed">0</div>
+      <div class="stat-label">Lessons completed</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-inprogress">0</div>
+      <div class="stat-label">In progress</div>
+    </div>
+  </section>
+
+  <main class="layout">
+    <section class="lessons-panel">
+      <div class="panel-head">
+        <h2>Courses</h2>
+        <p class="panel-hint">Click a lesson to open it and focus the AI tutor on it. Use the "Mark complete" button on a lesson to mark it done.</p>
+      </div>
+      <div class="course-tabs" id="course-tabs"></div>
+      <p class="course-desc" id="course-desc"></p>
+      <ul id="lesson-list" class="lesson-list"></ul>
+    </section>
+
+    <section class="chat-panel">
+      <div class="chat-header">
+        <h2>AI Tutor</h2>
+        <span id="chat-context" class="chat-context">General help. Select a lesson to focus me on it.</span>
+      </div>
+
+      <div id="chat-messages" class="chat-messages">
+        <div class="chat-empty" id="chat-empty">
+          👋 Ask me anything about this course, or try a quick action below.
+          I can explain a concept, give you a practice exercise, or quiz you.
+        </div>
+      </div>
+
+      <div class="quick-actions" id="quick-actions">
+        <button type="button" data-prompt="Can you explain the current lesson in simpler terms?">💡 Explain simpler</button>
+        <button type="button" data-prompt="Give me a short practice exercise for this lesson.">📝 Give me an exercise</button>
+        <button type="button" data-prompt="Quiz me with one question about this lesson.">❓ Quiz me</button>
+      </div>
+
+      <div class="follow-ups" id="follow-ups"></div>
+
+      <form id="chat-form" class="chat-form">
+        <input id="chat-input" type="text" placeholder="Ask the tutor a question…" autocomplete="off" />
+        <button type="submit">Send</button>
+      </form>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

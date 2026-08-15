@@ -11,9 +11,10 @@ assistant, and (3) this write up.
 
 - **Backend**: Python, FastAPI, SQLAlchemy, SQLite
 - **Frontend**: plain HTML, CSS, vanilla JS (no build step, calls the JSON API directly)
-- **AI**: pluggable provider layer. Google Gemini or Groq (both free tier) or Anthropic
-  Claude (paid), with an offline mock fallback so the assistant works even with no API
-  key configured, or if a configured provider's quota is exhausted
+- **AI**: Groq API (free tier, Llama models) powers the tutor in this deployment. The
+  code also has a pluggable provider layer that can use Google Gemini or Anthropic
+  Claude instead, and an offline mock fallback so the assistant still works with no
+  API key configured, or if a configured provider's quota is exhausted
 - **Tests**: pytest + FastAPI's `TestClient`
 - **Deploy**: Render (`render.yaml`)
 
@@ -66,7 +67,9 @@ since the dataset is tiny. That's the simplest correct thing that could work.
   Google AI Studio), then `GROQ_API_KEY` (free, fast open model inference), otherwise a
   `MockProvider` that still produces context aware (not just canned) replies
   referencing the active lesson's title and summary, so the feature is fully demoable
-  with zero configuration. Swapping in a real key requires no code change.
+  with zero configuration. Only `GROQ_API_KEY` is actually set for this deployment, so
+  Groq is the provider in use. Swapping in a real Anthropic or Gemini key instead
+  requires no code change.
 - **Resilient at request time**: if the configured provider's call fails (for example a
   free tier daily quota is exhausted), the chat endpoint catches the error and falls
   back to the mock provider for that reply instead of returning a 500, tagging the
@@ -93,12 +96,13 @@ reviewer can run it in one command.
   I scoped it out explicitly rather than half implementing it.
 - *Provider abstraction with a mock fallback, supporting free tier APIs.* I didn't have
   an API key on hand when I started, so I built the assistant against an interface
-  (`AIProvider.reply(...)`) rather than any one vendor's SDK. When testing with a real
-  key, Gemini's free tier quota was hit almost immediately, so beyond just supporting
-  multiple providers, the chat endpoint catches provider errors at request time and
-  transparently falls back to the mock for that single reply rather than surfacing a
-  500 to the student. This mirrors a real product concern: free or cheap tier AI
-  features need graceful degradation, not just a happy path integration.
+  (`AIProvider.reply(...)`) rather than any one vendor's SDK. My first real key was for
+  Gemini, and its free tier quota was hit almost immediately, so I added Groq as a
+  second free tier option and that's the one actually powering this deployment. Beyond
+  just supporting multiple providers, the chat endpoint also catches provider errors at
+  request time and transparently falls back to the mock for that single reply rather
+  than surfacing a 500 to the student. This mirrors a real product concern: free or
+  cheap tier AI features need graceful degradation, not just a happy path integration.
 - *Streak and percent computed on read, not stored.* At this scale (one student, a
   handful of lessons) a derived value recomputed per request is simpler and can't
   drift out of sync with the underlying `Progress` rows. A cached counter would be
@@ -131,8 +135,12 @@ reviewer can run it in one command.
 ## AI tools & libraries used
 
 - **Claude Code**: used as a development assistant while building this project
-  (planning, implementation, and this write up).
-- **Anthropic Claude API** (`anthropic` Python SDK): powers the AI Learning Assistant
-  when `ANTHROPIC_API_KEY` is set.
+  (planning, implementation, and this write up). This is a coding tool, not part of
+  the running app.
+- **Groq API** (Llama 3.3 70B): the AI model that actually powers the AI Learning
+  Assistant in this deployment, used through plain HTTP calls to Groq's
+  OpenAI-compatible endpoint.
+- The codebase also supports Google Gemini or Anthropic Claude as drop-in alternatives
+  (see `backend/app/ai/provider.py`), but neither was used for the deployed demo.
 - **FastAPI, SQLAlchemy, Pydantic, Uvicorn, pytest**: backend framework and tooling.
 - Plain HTML, CSS, JS: no frontend framework or build tooling used.

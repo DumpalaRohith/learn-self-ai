@@ -4,8 +4,10 @@ A small student learning progress tracker with an integrated AI tutor. Built as 
 home evaluation covering: (1) a progress tracking feature, (2) an AI powered learning
 assistant, and (3) this write up.
 
-**Live demo:** _add Render URL here after deploying_
-**Repo:** _add GitHub URL here_
+**Live demo:** https://learnselfai.onrender.com (hosted on Render's free tier, so it
+spins down after inactivity; the first load after idling can take 30 to 60 seconds
+to wake back up)
+**Repo:** https://github.com/DumpalaRohith/learn-self-ai
 
 ## Tech stack
 

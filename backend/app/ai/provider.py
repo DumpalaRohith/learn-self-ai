@@ -51,9 +51,10 @@ MODE_INSTRUCTIONS = {
     ),
     "simpler": (
         "The student found the normal explanation too hard and wants it SIMPLER. Give a "
-        "short, plain-language explanation with a relatable everyday analogy. Skip the "
-        "key concepts list and practice questions this time, just re-explain simply in a "
-        "short paragraph."
+        "short, plain-language explanation with a relatable everyday analogy, plus one "
+        "small practical example. Skip the formal bulleted key concepts list, but still "
+        "end with 2 to 3 short practice questions for the student to try on their own "
+        "(do not answer them yourself)."
     ),
     "exercise": (
         "The student asked for a practice exercise. Give ONE concrete, small practice "
@@ -222,7 +223,10 @@ class MockProvider(AIProvider):
             body = (
                 f"{opener} Think of {topic} like a everyday routine you already know: "
                 f"you follow a few small, repeatable steps to get to the result. "
-                f"{summary}"
+                f"{summary}\n\n"
+                f"Practice questions:\n"
+                f"1. Can you describe {topic} in one plain sentence?\n"
+                f"2. Where might you use {topic} in something you already do?"
             )
         else:
             body = (

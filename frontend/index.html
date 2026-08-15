@@ -52,8 +52,28 @@
         <p class="panel-hint">Click a lesson to open it and focus the AI tutor on it. Use the "Mark complete" button on a lesson to mark it done.</p>
       </div>
       <div class="course-tabs" id="course-tabs"></div>
+      <button type="button" id="add-subject-toggle" class="add-toggle-btn">+ Add subject</button>
+      <form id="add-subject-form" class="add-form" hidden>
+        <input id="new-subject-title" type="text" placeholder="Subject name (e.g. JavaScript Basics)" required />
+        <input id="new-subject-desc" type="text" placeholder="Short description (optional)" />
+        <div class="add-form-actions">
+          <button type="submit">Add subject</button>
+          <button type="button" id="add-subject-cancel" class="secondary">Cancel</button>
+        </div>
+      </form>
+
       <p class="course-desc" id="course-desc"></p>
       <ul id="lesson-list" class="lesson-list"></ul>
+
+      <button type="button" id="add-topic-toggle" class="add-toggle-btn">+ Add topic</button>
+      <form id="add-topic-form" class="add-form" hidden>
+        <input id="new-topic-title" type="text" placeholder="Topic name (e.g. Closures)" required />
+        <input id="new-topic-desc" type="text" placeholder="Short description (optional)" />
+        <div class="add-form-actions">
+          <button type="submit">Add topic</button>
+          <button type="button" id="add-topic-cancel" class="secondary">Cancel</button>
+        </div>
+      </form>
     </section>
 
     <section class="chat-panel">

@@ -8,8 +8,11 @@ from app.database import get_db
 from app.models import ChatMessage, Course, Lesson, Progress, ProgressStatus, Student
 from app.schemas import (
     CompleteLessonOut,
+    CourseCreate,
     CourseOut,
     CourseProgressSummary,
+    LessonCreate,
+    LessonOut,
     ProgressSummaryOut,
 )
 
@@ -66,6 +69,54 @@ def list_courses(db: Session = Depends(get_db)):
             }
         )
     return result
+
+
+@router.post("/courses", response_model=CourseOut, status_code=201)
+def create_course(payload: CourseCreate, db: Session = Depends(get_db)):
+    title = payload.title.strip()
+    if not title:
+        raise HTTPException(status_code=422, detail="Subject title is required")
+
+    course = Course(title=title, description=payload.description.strip())
+    db.add(course)
+    db.commit()
+    db.refresh(course)
+
+    return {"id": course.id, "title": course.title, "description": course.description, "lessons": []}
+
+
+@router.post("/courses/{course_id}/lessons", response_model=LessonOut, status_code=201)
+def create_lesson(course_id: int, payload: LessonCreate, db: Session = Depends(get_db)):
+    student = _get_demo_student(db)
+    course = db.get(Course, course_id)
+    if not course:
+        raise HTTPException(status_code=404, detail="Subject not found")
+
+    title = payload.title.strip()
+    if not title:
+        raise HTTPException(status_code=422, detail="Topic title is required")
+
+    next_order = db.query(Lesson).filter_by(course_id=course_id).count()
+    lesson = Lesson(
+        course_id=course_id,
+        title=title,
+        order=next_order,
+        content_summary=payload.content_summary.strip(),
+    )
+    db.add(lesson)
+    db.flush()
+    db.add(Progress(student_id=student.id, lesson_id=lesson.id))
+    db.commit()
+    db.refresh(lesson)
+
+    return {
+        "id": lesson.id,
+        "title": lesson.title,
+        "order": lesson.order,
+        "content_summary": lesson.content_summary,
+        "status": ProgressStatus.not_started,
+        "chat_message_count": 0,
+    }
 
 
 def _compute_streak(db: Session, student_id: int) -> int:

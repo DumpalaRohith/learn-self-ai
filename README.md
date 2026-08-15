@@ -47,11 +47,16 @@ pytest
 
 ## Feature 1: Learning Progress
 
-- `GET /api/courses` returns the course, its lessons, and per lesson completion status.
-- `POST /api/progress/{lesson_id}/complete` toggles a lesson complete or incomplete.
-- `GET /api/progress/summary` computes overall percent complete, per course percent, and
-  a **day streak** (consecutive calendar days with at least one lesson completed).
-- The frontend shows a progress bar, streak counter, and a checkable lesson list.
+- `POST /api/courses` adds a new subject (title and optional description).
+- `POST /api/courses/{course_id}/lessons` adds a new topic under a subject (title and
+  optional description). Both are exposed in the UI as "+ Add subject" and "+ Add
+  topic" inline forms next to the course tabs and lesson list.
+- `GET /api/courses` returns every subject, its topics, and per topic completion status.
+- `POST /api/progress/{lesson_id}/complete` toggles a topic complete or incomplete.
+- `GET /api/progress/summary` computes overall percent complete, per subject percent,
+  and a **day streak** (consecutive calendar days with at least one topic completed).
+- The frontend shows a progress bar, streak counter, and a checkable topic list, and
+  every topic can be in one of three states: not started, in progress, or completed.
 
 Progress is computed on read directly from the `progress` table rather than cached,
 since the dataset is tiny. That's the simplest correct thing that could work.

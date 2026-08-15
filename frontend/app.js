@@ -23,6 +23,16 @@ const el = {
   followUps: document.getElementById("follow-ups"),
   chatForm: document.getElementById("chat-form"),
   chatInput: document.getElementById("chat-input"),
+  addSubjectToggle: document.getElementById("add-subject-toggle"),
+  addSubjectForm: document.getElementById("add-subject-form"),
+  addSubjectCancel: document.getElementById("add-subject-cancel"),
+  newSubjectTitle: document.getElementById("new-subject-title"),
+  newSubjectDesc: document.getElementById("new-subject-desc"),
+  addTopicToggle: document.getElementById("add-topic-toggle"),
+  addTopicForm: document.getElementById("add-topic-form"),
+  addTopicCancel: document.getElementById("add-topic-cancel"),
+  newTopicTitle: document.getElementById("new-topic-title"),
+  newTopicDesc: document.getElementById("new-topic-desc"),
 };
 
 // ---------- theme ----------
@@ -212,6 +222,70 @@ async function refreshCourses() {
   renderCourseTabs();
   renderLessons();
 }
+
+// ---------- add subject / add topic ----------
+
+function closeAddSubjectForm() {
+  el.addSubjectForm.hidden = true;
+  el.addSubjectToggle.hidden = false;
+  el.addSubjectForm.reset();
+}
+
+el.addSubjectToggle.addEventListener("click", () => {
+  el.addSubjectForm.hidden = false;
+  el.addSubjectToggle.hidden = true;
+  el.newSubjectTitle.focus();
+});
+
+el.addSubjectCancel.addEventListener("click", closeAddSubjectForm);
+
+el.addSubjectForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const title = el.newSubjectTitle.value.trim();
+  if (!title) return;
+
+  const course = await fetchJSON("/api/courses", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title, description: el.newSubjectDesc.value.trim() }),
+  });
+
+  closeAddSubjectForm();
+  state.activeCourseId = course.id;
+  state.activeLessonId = null;
+  await refreshCourses();
+  resetChatToGeneral();
+});
+
+function closeAddTopicForm() {
+  el.addTopicForm.hidden = true;
+  el.addTopicToggle.hidden = false;
+  el.addTopicForm.reset();
+}
+
+el.addTopicToggle.addEventListener("click", () => {
+  el.addTopicForm.hidden = false;
+  el.addTopicToggle.hidden = true;
+  el.newTopicTitle.focus();
+});
+
+el.addTopicCancel.addEventListener("click", closeAddTopicForm);
+
+el.addTopicForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const title = el.newTopicTitle.value.trim();
+  if (!title || !state.activeCourseId) return;
+
+  await fetchJSON(`/api/courses/${state.activeCourseId}/lessons`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title, content_summary: el.newTopicDesc.value.trim() }),
+  });
+
+  closeAddTopicForm();
+  await refreshCourses();
+  await loadSummary();
+});
 
 // ---------- chat ----------
 

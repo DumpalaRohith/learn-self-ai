@@ -27,6 +27,16 @@ class CourseOut(BaseModel):
         from_attributes = True
 
 
+class CourseCreate(BaseModel):
+    title: str
+    description: str = ""
+
+
+class LessonCreate(BaseModel):
+    title: str
+    content_summary: str = ""
+
+
 class CourseProgressSummary(BaseModel):
     course_id: int
     title: str

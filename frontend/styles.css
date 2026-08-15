@@ -251,7 +251,6 @@ body {
 .add-toggle-btn:hover { background: var(--accent-soft); }
 
 .add-form {
-  display: flex;
   flex-direction: column;
   gap: 0.5rem;
   background: var(--surface-alt);
@@ -259,6 +258,10 @@ body {
   border-radius: 12px;
   padding: 0.9rem;
   margin-bottom: 1rem;
+}
+
+.add-form:not([hidden]) {
+  display: flex;
 }
 
 .add-form input {

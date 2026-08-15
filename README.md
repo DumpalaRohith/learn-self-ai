@@ -12,7 +12,8 @@ to wake back up)
 ## Tech stack
 
 - **Backend**: Python, FastAPI, SQLAlchemy, SQLite
-- **Frontend**: plain HTML, CSS, vanilla JS (no build step, calls the JSON API directly)
+- **Frontend**: plain HTML, CSS, vanilla JS (no build step, calls the JSON API
+  directly), with a light/dark theme toggle
 - **AI**: Groq API (free tier, Llama models) powers the tutor in this deployment. The
   code also has a pluggable provider layer that can use Google Gemini or Anthropic
   Claude instead, and an offline mock fallback so the assistant still works with no
@@ -50,30 +51,47 @@ pytest
 - `POST /api/courses` adds a new subject (title and optional description).
 - `POST /api/courses/{course_id}/lessons` adds a new topic under a subject (title and
   optional description). Both are exposed in the UI as "+ Add subject" and "+ Add
-  topic" inline forms next to the course tabs and lesson list.
+  topic" buttons that reveal a small form when clicked.
+- `DELETE /api/courses/{course_id}` removes a subject and everything under it (its
+  topics, their progress, and their chat history). The UI exposes this as a "Delete
+  this subject" button with a confirmation prompt first, since it can't be undone.
+  Only whole subjects can be deleted this way, not individual topics.
 - `GET /api/courses` returns every subject, its topics, and per topic completion status.
 - `POST /api/progress/{lesson_id}/complete` toggles a topic complete or incomplete.
+- Opening a topic for the first time automatically marks it in progress
+  (`POST /api/progress/{lesson_id}/start`), so a topic's status naturally moves through
+  three states: not started, in progress, and completed.
 - `GET /api/progress/summary` computes overall percent complete, per subject percent,
   and a **day streak** (consecutive calendar days with at least one topic completed).
-- The frontend shows a progress bar, streak counter, and a checkable topic list, and
-  every topic can be in one of three states: not started, in progress, or completed.
+- The dashboard shows a progress ring, streak counter, lessons completed, and lessons
+  in progress, all updating live as you interact with the app.
 
 Progress is computed on read directly from the `progress` table rather than cached,
 since the dataset is tiny. That's the simplest correct thing that could work.
 
 ## Feature 2: AI Learning Assistant
 
-- `POST /api/assistant/chat` takes a message and an optional `lesson_id`. It loads
-  recent chat history for that lesson plus the lesson's summary and the student's
-  overall progress percent, builds a system prompt grounding the tutor in that context,
-  and calls the configured AI provider.
+- `POST /api/assistant/chat` takes a message, the topic it's about, and an optional
+  `mode`. It loads recent chat history for that topic plus the topic's summary and the
+  student's overall progress, builds a system prompt grounding the tutor in that
+  context, and calls the configured AI provider.
+- **Structured answers by default.** When a student just asks about a topic, the tutor
+  always replies with a simple explanation, a short list of key concepts, one practical
+  example, and 2 to 3 practice questions, without needing to be asked for any of that.
+- **Quick actions**: "Explain simpler", "Give me an exercise", and "Quiz me" send the
+  same request with a `mode` of `simpler`, `exercise`, or `quiz`, which swaps in a
+  shorter, more targeted instruction instead of the full four part structure.
+- **Follow-up suggestions**: every reply also comes with 2 to 3 follow-up questions,
+  shown as clickable chips so the student can keep going with one tap instead of
+  typing.
 - `GET /api/assistant/history` returns persisted chat history so conversations survive
-  a page reload.
+  a page reload, and each topic shows a small "💬 N messages" note once you've chatted
+  about it, so it's clear the conversation was saved.
 - **Provider abstraction** (`backend/app/ai/provider.py`): `get_provider()` checks env
   vars in priority order: `ANTHROPIC_API_KEY` (paid), then `GEMINI_API_KEY` (free,
   Google AI Studio), then `GROQ_API_KEY` (free, fast open model inference), otherwise a
   `MockProvider` that still produces context aware (not just canned) replies
-  referencing the active lesson's title and summary, so the feature is fully demoable
+  referencing the active topic's title and summary, so the feature is fully demoable
   with zero configuration. Only `GROQ_API_KEY` is actually set for this deployment, so
   Groq is the provider in use. Swapping in a real Anthropic or Gemini key instead
   requires no code change.
@@ -82,8 +100,8 @@ since the dataset is tiny. That's the simplest correct thing that could work.
   back to the mock provider for that reply instead of returning a 500, tagging the
   response `provider: "mock-fallback"` so it's visible in the API response which path
   was used.
-- Selecting a lesson in the UI scopes the chat to that lesson, so the assistant can say
-  things like "Since you're working through Loops...".
+- Selecting a topic in the UI scopes the chat to it, so the assistant can say things
+  like "Since you're working through Loops...".
 
 ## Task 3: Approach, challenges, improvements
 

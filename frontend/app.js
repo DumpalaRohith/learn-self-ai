@@ -255,6 +255,12 @@ async function loadHistory() {
 async function sendMessage(message) {
   if (!message) return;
 
+  if (!state.activeLessonId) {
+    appendMessage("user", message);
+    appendMessage("assistant", "Please select a lesson from the list on the left first, so I know what to help you with.");
+    return;
+  }
+
   appendMessage("user", message);
 
   const submitBtn = el.chatForm.querySelector("button");

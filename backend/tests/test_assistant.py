@@ -20,6 +20,31 @@ def test_chat_grounds_reply_in_lesson_context(client):
     assert lesson["title"] in reply
 
 
+def test_chat_default_mode_returns_structured_answer(client):
+    res = client.post("/api/assistant/chat", json={"message": "Explain recursion"})
+    reply = res.json()["reply"]["content"].lower()
+    assert "key concepts" in reply
+    assert "practice question" in reply
+
+
+def test_chat_exercise_mode(client):
+    res = client.post("/api/assistant/chat", json={"message": "give me an exercise", "mode": "exercise"})
+    assert res.status_code == 200
+    assert len(res.json()["reply"]["content"]) > 0
+
+
+def test_chat_quiz_mode(client):
+    res = client.post("/api/assistant/chat", json={"message": "quiz me", "mode": "quiz"})
+    assert res.status_code == 200
+    assert len(res.json()["reply"]["content"]) > 0
+
+
+def test_chat_simpler_mode(client):
+    res = client.post("/api/assistant/chat", json={"message": "explain simpler", "mode": "simpler"})
+    assert res.status_code == 200
+    assert len(res.json()["reply"]["content"]) > 0
+
+
 def test_chat_falls_back_to_mock_when_provider_errors(client, monkeypatch):
     import app.routers.assistant as assistant_module
 

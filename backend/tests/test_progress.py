@@ -128,3 +128,24 @@ def test_create_topic_requires_title(client):
     course = client.post("/api/courses", json={"title": "Another Subject"}).json()
     res = client.post(f"/api/courses/{course['id']}/lessons", json={"title": " "})
     assert res.status_code == 422
+
+
+def test_delete_subject_removes_it_and_its_topics(client):
+    course = client.post("/api/courses", json={"title": "Temporary Subject"}).json()
+    client.post(f"/api/courses/{course['id']}/lessons", json={"title": "Temp topic"})
+
+    before = client.get("/api/progress/summary").json()["total_lessons"]
+
+    res = client.delete(f"/api/courses/{course['id']}")
+    assert res.status_code == 204
+
+    courses = client.get("/api/courses").json()
+    assert all(c["id"] != course["id"] for c in courses)
+
+    after = client.get("/api/progress/summary").json()["total_lessons"]
+    assert after == before - 1
+
+
+def test_delete_unknown_subject_404(client):
+    res = client.delete("/api/courses/9999")
+    assert res.status_code == 404

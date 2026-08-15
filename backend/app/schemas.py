@@ -62,6 +62,7 @@ class CompleteLessonOut(BaseModel):
 class ChatRequest(BaseModel):
     message: str
     lesson_id: int | None = None
+    mode: str | None = None
 
 
 class ChatMessageOut(BaseModel):

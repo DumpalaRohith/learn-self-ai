@@ -13,6 +13,7 @@ class TutorContext:
     lesson_summary: str | None = None
     overall_percent_complete: float = 0.0
     history: list[dict] = field(default_factory=list)  # [{"role": "user"/"assistant", "content": str}]
+    mode: str | None = None  # None (default), "simpler", "exercise", or "quiz"
 
 
 @dataclass
@@ -27,17 +28,42 @@ called LearnSelfAI. The student is learning programming fundamentals.
 {lesson_line}
 The student has completed {percent:.0f}% of the course so far.
 
-Answer the student's question clearly and concisely. Use short examples where helpful, \
-and use fenced code blocks for actual code. Avoid decorative markdown like bold section \
-headers - write in plain, direct prose. Never use em dashes (—) or curly quotes; use \
-commas, periods, or straight quotes instead. If the question is unrelated to the current \
-lesson, still answer it helpfully. Keep replies focused - a few short paragraphs or a \
-small code snippet at most. If the student asks for an exercise or to be quizzed, give \
-ONE concrete small practice problem (not the answer).
+{mode_instructions}
+
+Avoid decorative markdown like bold section headers - write in plain, direct prose, and \
+use fenced code blocks only for actual code. Never use em dashes (—) or curly quotes; \
+use commas, periods, or straight quotes instead. If the question is unrelated to the \
+current lesson, still answer it helpfully.
 
 After your answer, on its own final line, suggest 2-3 short natural follow-up questions \
 the student might want to ask next, formatted EXACTLY like this with no extra text after:
 FOLLOWUPS: question one? | question two? | question three?"""
+
+MODE_INSTRUCTIONS = {
+    None: (
+        "Structure your answer in four short, clearly separated parts, in this order:\n"
+        "1. A simple explanation of the topic the student is asking about.\n"
+        "2. Key concepts, as a short bulleted list.\n"
+        "3. One practical example (a short code snippet if the topic is code-related).\n"
+        "4. 2 to 3 practice questions for the student to try on their own (do not answer "
+        "them yourself).\n"
+        "Keep every part brief. This is a quick study aid, not a textbook chapter."
+    ),
+    "simpler": (
+        "The student found the normal explanation too hard and wants it SIMPLER. Give a "
+        "short, plain-language explanation with a relatable everyday analogy. Skip the "
+        "key concepts list and practice questions this time, just re-explain simply in a "
+        "short paragraph."
+    ),
+    "exercise": (
+        "The student asked for a practice exercise. Give ONE concrete, small practice "
+        "problem on the current topic (not the answer). Keep it to a few sentences."
+    ),
+    "quiz": (
+        "The student asked to be quizzed. Ask ONE quiz question about the current topic "
+        "to test their understanding (not the answer). Keep it to one or two sentences."
+    ),
+}
 
 _FOLLOWUPS_RE = re.compile(r"\n?FOLLOWUPS:\s*(.+)\s*$", re.IGNORECASE)
 
@@ -49,8 +75,11 @@ def _build_system_prompt(context: TutorContext) -> str:
         if context.lesson_title
         else "The student has not selected a specific lesson."
     )
+    mode_instructions = MODE_INSTRUCTIONS.get(context.mode, MODE_INSTRUCTIONS[None])
     return SYSTEM_PROMPT_TEMPLATE.format(
-        lesson_line=lesson_line, percent=context.overall_percent_complete
+        lesson_line=lesson_line,
+        percent=context.overall_percent_complete,
+        mode_instructions=mode_instructions,
     )
 
 
@@ -178,36 +207,38 @@ class MockProvider(AIProvider):
 
     def reply(self, message: str, context: TutorContext) -> TutorReply:
         opener = random.choice(self._OPENERS)
-        lower = message.lower()
         topic = context.lesson_title or "this topic"
+        summary = context.lesson_summary or "the basics of what you're asking about"
 
-        if context.lesson_title:
-            focus = (
-                f"Since you're working through {context.lesson_title}, here's a "
-                f"pointer grounded in that topic: {context.lesson_summary}"
-            )
-        else:
-            focus = "Pick a lesson from the sidebar and I can tailor my answer to it."
-
-        if any(k in lower for k in ("exercise", "practice", "quiz", "test me")):
+        if context.mode == "exercise":
             body = (
                 f"{opener} Here's a quick practice problem on {topic}: try writing a "
-                f"short snippet that puts today's idea to use, then run it and see if "
-                f"the output matches what you expected. {focus}"
+                f"short snippet that puts today's idea to use, then run it and check "
+                f"the output matches what you expected."
             )
-        elif "?" in message:
+        elif context.mode == "quiz":
+            body = f"Quick check: in your own words, what is the main idea behind {topic}?"
+        elif context.mode == "simpler":
             body = (
-                f"{opener} Here's a starting point on '{message.strip()}': "
-                f"break the problem into small steps, try a tiny example in a Python "
-                f"shell, and check the result matches what you expect. {focus}"
-            )
-        elif any(k in lower for k in ("stuck", "confused", "don't understand", "help")):
-            body = (
-                f"{opener} It's normal to feel stuck here. {focus} Try re-reading the "
-                "summary above, then write a 3-line example yourself before moving on."
+                f"{opener} Think of {topic} like a everyday routine you already know: "
+                f"you follow a few small, repeatable steps to get to the result. "
+                f"{summary}"
             )
         else:
-            body = f"{opener} {focus} Let me know what part you'd like to dig into."
+            body = (
+                f"{opener}\n\n"
+                f"Explanation: {summary}\n\n"
+                f"Key concepts:\n"
+                f"- The core idea behind {topic}\n"
+                f"- How it fits with what you've already covered\n"
+                f"- A common pitfall beginners run into\n\n"
+                f"Example: try a small, self-contained snippet that only exercises "
+                f"{topic}, run it, and compare the output to what you expected.\n\n"
+                f"Practice questions:\n"
+                f"1. In your own words, what problem does {topic} solve?\n"
+                f"2. Can you write a 3-line example using {topic}?\n"
+                f"3. What would happen if you got a key detail of {topic} wrong?"
+            )
 
         body += (
             "\n\n(This is an offline demo reply. Configure a free AI API key to get "

@@ -33,6 +33,7 @@ const el = {
   addTopicCancel: document.getElementById("add-topic-cancel"),
   newTopicTitle: document.getElementById("new-topic-title"),
   newTopicDesc: document.getElementById("new-topic-desc"),
+  deleteSubjectBtn: document.getElementById("delete-subject-btn"),
 };
 
 // ---------- theme ----------
@@ -121,8 +122,17 @@ function renderCourseTabs() {
 
 function renderLessons() {
   const course = state.courses.find((c) => c.id === state.activeCourseId);
-  if (!course) return;
 
+  if (!course) {
+    el.courseDesc.textContent = "No subjects yet. Add one above to get started.";
+    el.lessonList.innerHTML = "";
+    el.addTopicToggle.hidden = true;
+    el.deleteSubjectBtn.hidden = true;
+    return;
+  }
+
+  el.addTopicToggle.hidden = false;
+  el.deleteSubjectBtn.hidden = false;
   el.courseDesc.textContent = course.description;
   el.lessonList.innerHTML = "";
 
@@ -287,6 +297,24 @@ el.addTopicForm.addEventListener("submit", async (e) => {
   await loadSummary();
 });
 
+el.deleteSubjectBtn.addEventListener("click", async () => {
+  const course = state.courses.find((c) => c.id === state.activeCourseId);
+  if (!course) return;
+
+  const confirmed = confirm(
+    `Delete "${course.title}" and all ${course.lessons.length} of its topics? This cannot be undone.`
+  );
+  if (!confirmed) return;
+
+  await fetchJSON(`/api/courses/${course.id}`, { method: "DELETE" });
+
+  state.activeCourseId = null;
+  state.activeLessonId = null;
+  await refreshCourses();
+  await loadSummary();
+  resetChatToGeneral();
+});
+
 // ---------- chat ----------
 
 function clearFollowUps() {
@@ -326,7 +354,7 @@ async function loadHistory() {
   history.forEach((m) => appendMessage(m.role, m.content));
 }
 
-async function sendMessage(message) {
+async function sendMessage(message, mode = null) {
   if (!message) return;
 
   if (!state.activeLessonId) {
@@ -347,7 +375,7 @@ async function sendMessage(message) {
     const res = await fetchJSON("/api/assistant/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message, lesson_id: state.activeLessonId }),
+      body: JSON.stringify({ message, lesson_id: state.activeLessonId, mode }),
     });
     thinking.classList.remove("pending");
     thinking.innerHTML = renderMarkdown(res.reply.content);
@@ -372,7 +400,7 @@ el.chatForm.addEventListener("submit", (e) => {
 el.quickActions.addEventListener("click", (e) => {
   const btn = e.target.closest("button[data-prompt]");
   if (!btn) return;
-  sendMessage(btn.dataset.prompt);
+  sendMessage(btn.dataset.prompt, btn.dataset.mode || null);
 });
 
 // ---------- init ----------

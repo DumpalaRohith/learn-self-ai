@@ -81,6 +81,7 @@ def chat(payload: ChatRequest, db: Session = Depends(get_db)):
         lesson_summary=lesson.content_summary if lesson else None,
         overall_percent_complete=_overall_percent(db, student.id),
         history=[{"role": m.role.value, "content": m.content} for m in recent],
+        mode=payload.mode,
     )
 
     user_msg = ChatMessage(

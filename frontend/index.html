@@ -65,7 +65,10 @@
       <p class="course-desc" id="course-desc"></p>
       <ul id="lesson-list" class="lesson-list"></ul>
 
-      <button type="button" id="add-topic-toggle" class="add-toggle-btn">+ Add topic</button>
+      <div class="lessons-panel-actions">
+        <button type="button" id="add-topic-toggle" class="add-toggle-btn">+ Add topic</button>
+        <button type="button" id="delete-subject-btn" class="delete-toggle-btn">🗑 Delete this subject</button>
+      </div>
       <form id="add-topic-form" class="add-form" hidden>
         <input id="new-topic-title" type="text" placeholder="Topic name (e.g. Closures)" required />
         <input id="new-topic-desc" type="text" placeholder="Short description (optional)" />
@@ -90,9 +93,9 @@
       </div>
 
       <div class="quick-actions" id="quick-actions">
-        <button type="button" data-prompt="Can you explain the current lesson in simpler terms?">💡 Explain simpler</button>
-        <button type="button" data-prompt="Give me a short practice exercise for this lesson.">📝 Give me an exercise</button>
-        <button type="button" data-prompt="Quiz me with one question about this lesson.">❓ Quiz me</button>
+        <button type="button" data-mode="simpler" data-prompt="Can you explain the current lesson in simpler terms?">💡 Explain simpler</button>
+        <button type="button" data-mode="exercise" data-prompt="Give me a short practice exercise for this lesson.">📝 Give me an exercise</button>
+        <button type="button" data-mode="quiz" data-prompt="Quiz me with one question about this lesson.">❓ Quiz me</button>
       </div>
 
       <div class="follow-ups" id="follow-ups"></div>

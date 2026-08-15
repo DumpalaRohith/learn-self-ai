@@ -250,6 +250,28 @@ body {
 
 .add-toggle-btn:hover { background: var(--accent-soft); }
 
+.lessons-panel-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.lessons-panel-actions .add-toggle-btn { margin-bottom: 0; }
+
+.delete-toggle-btn {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #b3261e;
+  background: none;
+  border: 1px dashed #b3261e;
+  border-radius: 8px;
+  padding: 0.4rem 0.75rem;
+  cursor: pointer;
+}
+
+.delete-toggle-btn:hover { background: #fce8e6; }
+
 .add-form {
   flex-direction: column;
   gap: 0.5rem;

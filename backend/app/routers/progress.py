@@ -119,6 +119,28 @@ def create_lesson(course_id: int, payload: LessonCreate, db: Session = Depends(g
     }
 
 
+@router.delete("/courses/{course_id}", status_code=204)
+def delete_course(course_id: int, db: Session = Depends(get_db)):
+    course = db.get(Course, course_id)
+    if not course:
+        raise HTTPException(status_code=404, detail="Subject not found")
+
+    lesson_ids = [lesson.id for lesson in course.lessons]
+    if lesson_ids:
+        db.query(ChatMessage).filter(ChatMessage.lesson_id.in_(lesson_ids)).delete(
+            synchronize_session=False
+        )
+        db.query(Progress).filter(Progress.lesson_id.in_(lesson_ids)).delete(
+            synchronize_session=False
+        )
+        db.query(Lesson).filter(Lesson.id.in_(lesson_ids)).delete(
+            synchronize_session=False
+        )
+
+    db.query(Course).filter_by(id=course_id).delete(synchronize_session=False)
+    db.commit()
+
+
 def _compute_streak(db: Session, student_id: int) -> int:
     """Consecutive days (ending today or yesterday) with at least one completion."""
     dates = (
